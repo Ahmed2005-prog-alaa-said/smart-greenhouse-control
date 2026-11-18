@@ -4,7 +4,7 @@ from controller import GreenhouseController
 
 
 def run_scenario(name, soil, temp, water, steps=12, step_seconds=10):
-    """بتشغّل سيناريو وهمي وتطبع اللي بيحصل في كل خطوة."""
+    """بتشغّل سيناريو وهمي وتطبع القرارات وأسباب السكوت."""
     print(f"\n=== {name} ===")
     controller = GreenhouseController()
     pump_on = False
@@ -32,6 +32,8 @@ def run_scenario(name, soil, temp, water, steps=12, step_seconds=10):
 
         print(f"t={now:>3}s  soil={soil:>3}%  "
               f"state={controller.pump.state:<11}  {commands}")
+        for note in controller.notes:
+            print(f"          note: {note}")
 
         # فيزياء مبسطة: المضخة شغالة = التربة بتترطب، غير كده بتنشف
         soil = min(100, soil + 10) if pump_on else max(0, soil - 1)
