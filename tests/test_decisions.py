@@ -1,14 +1,24 @@
+from datetime import datetime, timezone, timedelta
+
 from decision_engine import decide
 
 
 def base(**overrides):
-    t = {"plant_type": "tomato", "soil_moisture_percent": 55,
-         "temperature_c": 24, "water_level_percent": 70}
+    """قراءة سليمة نعدّل عليها في كل اختبار."""
+    t = {
+        "plant_type": "tomato",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "soil_moisture_percent": 55,
+        "temperature_c": 24,
+        "humidity_percent": 60,
+        "water_level_percent": 70,
+    }
     t.update(overrides)
     return t
 
 
 def actuators(decisions):
+    """بترجّع أسماء الأجهزة اللي في القرارات بس."""
     return [d["actuator"] for d in decisions]
 
 
@@ -31,3 +41,13 @@ def test_hot_turns_fan_on():
 
 def test_cold_turns_heater_on():
     assert "heater" in actuators(decide(base(temperature_c=10)))
+
+
+def test_stale_data_gives_no_decision():
+    old = datetime.now(timezone.utc) - timedelta(hours=1)
+    result = decide(base(timestamp=old.isoformat(), soil_moisture_percent=35))
+    assert result == []
+
+
+def test_broken_sensor_gives_no_decision():
+    assert decide(base(temperature_c=200)) == []
