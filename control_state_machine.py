@@ -19,12 +19,17 @@ class PumpStateMachine:
         self.state = IDLE
         self.since = 0  # وقت دخول الحالة الحالية
 
-    def update(self, now, wants_water, safe):
+    def update(self, now, wants_water, safe, reached_target=None):
         """
-        now:         الوقت الحالي بالثواني
-        wants_water: هل التربة محتاجة ري؟
-        safe:        هل القراءة آمنة؟
+        now:            الوقت الحالي بالثواني
+        wants_water:    هل التربة محتاجة ري؟ (بتبدأ بيها)
+        safe:           هل القراءة آمنة؟
+        reached_target: هل التربة وصلت للهدف؟ (بتوقف بيها)
+                        لو مش متبعتة، بنعتبرها عكس wants_water
         """
+        if reached_target is None:
+            reached_target = not wants_water
+
         # لو مش آمن: ادخل ERROR، ولو المضخة شغالة اطفيها
         if not safe:
             was_running = self.state == IRRIGATING
@@ -46,9 +51,9 @@ class PumpStateMachine:
                 return "ON"
             return None
 
-        # شغالة: اطفيها لو التربة اترطبت أو عدّت أقصى مدة
+        # شغالة: اطفيها لو وصلنا للهدف أو عدّت أقصى مدة
         if self.state == IRRIGATING:
-            if (not wants_water) or (now - self.since >= MAX_RUN_SECONDS):
+            if reached_target or (now - self.since >= MAX_RUN_SECONDS):
                 self.state = COOLDOWN
                 self.since = now
                 return "OFF"
