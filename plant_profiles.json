@@ -1,0 +1,7 @@
+{
+  "tomato": {
+    "soil_moisture_percent": {"min": 40, "max": 70},
+    "temperature_c": {"min": 18, "max": 30},
+    "source": "TODO: اكتب المرجع هنا"
+  }
+}
