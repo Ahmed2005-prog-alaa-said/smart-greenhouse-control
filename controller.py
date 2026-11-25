@@ -2,6 +2,10 @@ from decision_engine import decide, make_decision, load_profile, get_limits
 from safety_rules import check_telemetry, can_run_pump
 from control_state_machine import PumpStateMachine, COOLDOWN
 
+# الفرق بين نقطة التشغيل ونقطة الإيقاف (بالدرجات).
+# Harel et al. 2014: التبريد بدأ فوق 30 ووقف عند 28.
+HYSTERESIS_C = 2
+
 # سبب كل قرار لأجهزة الحرارة
 REASONS = {
     ("fan", "ON"): "Temperature above configured maximum",
@@ -72,6 +76,18 @@ class GreenhouseController:
 
             # decide() بتقولنا مين محتاج يشتغل من ناحية الحرارة
             wanted = {d["actuator"] for d in decide(telemetry)}
+
+            # hysteresis: لو الجهاز شغال، يفضل شغال لحد ما الحرارة ترجع
+            # جوه المدى بفرق HYSTERESIS_C (عشان مايدقش ON/OFF)
+            temp_min, temp_max = get_limits(profile, "temperature_c")
+            temp = telemetry["temperature_c"]
+            if (self.last["fan"] == "ON" and temp_max is not None
+                    and temp > temp_max - HYSTERESIS_C):
+                wanted.add("fan")
+            if (self.last["heater"] == "ON" and temp_min is not None
+                    and temp < temp_min + HYSTERESIS_C):
+                wanted.add("heater")
+
             for actuator in ("fan", "heater"):
                 decision = self._sync(actuator, actuator in wanted)
                 if decision:
