@@ -14,7 +14,7 @@ def run_scenario(name, soil, temp, water, steps=12, step_seconds=10):
 
         # قراءة وهمية بنفس شكل الـ Data Contract
         reading = {
-            "plant_type": "tomato",
+            "plant_type": "demo_plant",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "soil_moisture_percent": soil,
             "temperature_c": temp,

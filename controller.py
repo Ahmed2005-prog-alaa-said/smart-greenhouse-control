@@ -1,4 +1,4 @@
-from decision_engine import decide, make_decision, load_profile
+from decision_engine import decide, make_decision, load_profile, get_limits
 from safety_rules import check_telemetry, can_run_pump
 from control_state_machine import PumpStateMachine, COOLDOWN
 
@@ -36,30 +36,39 @@ class GreenhouseController:
     def step(self, telemetry, now):
         """now = الوقت الحالي بالثواني."""
         self.notes = []  # نبدأ كل قراءة بملاحظات فاضية
+
+        # فحص القراءة، وبعدها نتأكد إن النبات موجود في الملف
         problems = check_telemetry(telemetry)
+        profile = None
+        if not problems:
+            profile = load_profile(telemetry.get("plant_type"))
+            if profile is None:
+                problems = [f"unknown plant type: {telemetry.get('plant_type')}"]
+
         safe = not problems
         wants_water = False
         reached_target = False
         decisions = []
 
         if not safe:
-            # القراءة مرفوضة: نسجّل السبب
             self.notes = [f"Reading rejected: {p}" for p in problems]
         else:
-            profile = load_profile(telemetry["plant_type"])
-            limits = profile["soil_moisture_percent"]
+            soil_min, soil_max = get_limits(profile, "soil_moisture_percent")
             soil = telemetry["soil_moisture_percent"]
             tank_ok = can_run_pump(telemetry)
 
-            # الهدف: نص المدى بين الحد الأدنى والأقصى (للطماطم 55%)
-            target = (limits["min"] + limits["max"]) / 2
-
-            # نبدأ الري تحت الحد الأدنى، ونوقف عند الهدف أو لو الخزان فضي
-            wants_water = soil < limits["min"] and tank_ok
-            reached_target = soil >= target or not tank_ok
-
-            if soil < limits["min"] and not tank_ok:
-                self.notes.append("Pump blocked: water tank too low")
+            if soil_min is None or soil_max is None:
+                # الأرقام null: الري متعطّل ومش هنخمّن
+                reached_target = True
+                self.notes.append(
+                    "Irrigation disabled: no soil moisture limits set for this plant")
+            else:
+                # الهدف: نص المدى بين الحد الأدنى والأقصى
+                target = (soil_min + soil_max) / 2
+                wants_water = soil < soil_min and tank_ok
+                reached_target = soil >= target or not tank_ok
+                if soil < soil_min and not tank_ok:
+                    self.notes.append("Pump blocked: water tank too low")
 
             # decide() بتقولنا مين محتاج يشتغل من ناحية الحرارة
             wanted = {d["actuator"] for d in decide(telemetry)}

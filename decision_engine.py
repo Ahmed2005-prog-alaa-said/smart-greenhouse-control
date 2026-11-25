@@ -10,9 +10,18 @@ PROFILES_PATH = Path(__file__).parent / "plant_profiles.json"
 
 
 def load_profile(plant_type):
-    """بتفتح ملف JSON وترجّع حدود النبات المطلوب."""
+    """بترجّع بيانات النبات، أو None لو النبات مش موجود في الملف."""
     with open(PROFILES_PATH, encoding="utf-8") as f:
-        return json.load(f)[plant_type]
+        return json.load(f).get(plant_type)
+
+
+def get_limits(profile, section):
+    """
+    بترجّع (min, max) للقسم المطلوب (زي temperature_c).
+    لو الأرقام null أو القسم مش موجود: بترجّع (None, None).
+    """
+    limits = (profile or {}).get(section) or {}
+    return limits.get("min"), limits.get("max")
 
 
 def make_decision(actuator, action, reason):
@@ -35,20 +44,27 @@ def decide(telemetry):
     if check_telemetry(telemetry):
         return []
 
-    profile = load_profile(telemetry["plant_type"])
+    # 2) نبات مش معروف: ماتقررش حاجة
+    profile = load_profile(telemetry.get("plant_type"))
+    if profile is None:
+        return []
+
     decisions = []
 
-    # 2) الري: التربة جافة + الخزان آمن
-    if can_run_pump(telemetry):
-        if telemetry["soil_moisture_percent"] < profile["soil_moisture_percent"]["min"]:
+    # 3) الري: بس لو حد الرطوبة معروف (مش null)
+    soil_min, _ = get_limits(profile, "soil_moisture_percent")
+    if soil_min is not None and can_run_pump(telemetry):
+        if telemetry["soil_moisture_percent"] < soil_min:
             decisions.append(make_decision(
                 "pump", "ON", "Soil moisture below configured threshold"))
 
-    # 3) الحرارة: عالية = مروحة، واطية = سخان
-    if telemetry["temperature_c"] > profile["temperature_c"]["max"]:
+    # 4) الحرارة: كل حد بيتفحص لو مش null
+    temp_min, temp_max = get_limits(profile, "temperature_c")
+    temp = telemetry["temperature_c"]
+    if temp_max is not None and temp > temp_max:
         decisions.append(make_decision(
             "fan", "ON", "Temperature above configured maximum"))
-    elif telemetry["temperature_c"] < profile["temperature_c"]["min"]:
+    elif temp_min is not None and temp < temp_min:
         decisions.append(make_decision(
             "heater", "ON", "Temperature below configured minimum"))
 

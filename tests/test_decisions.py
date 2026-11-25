@@ -6,7 +6,7 @@ from decision_engine import decide
 def base(**overrides):
     """قراءة سليمة نعدّل عليها في كل اختبار."""
     t = {
-        "plant_type": "tomato",
+        "plant_type": "demo_plant",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "soil_moisture_percent": 55,
         "temperature_c": 24,

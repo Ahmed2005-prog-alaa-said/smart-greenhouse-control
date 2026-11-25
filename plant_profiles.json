@@ -1,7 +1,82 @@
 {
+  "demo_plant": {
+    "temperature_c": {"min": 18, "max": 30, "source": "DEMO ONLY - placeholder for tests and simulator"},
+    "soil_moisture_percent": {"min": 40, "max": 70, "source": "DEMO ONLY - placeholder for tests and simulator"}
+  },
   "tomato": {
-    "soil_moisture_percent": {"min": 40, "max": 70},
-    "temperature_c": {"min": 18, "max": 30},
-    "source": "TODO: اكتب المرجع هنا"
+    "temperature_c": {
+      "min": 15,
+      "max": 30,
+      "source": "min: night 15-17 C, Univ. of Arizona CEAC Greenhouse Crop Production ch.3. max (cooling trigger): Harel et al. 2014, Agronomy 4:167-177, cooling started above 30 C and stopped at 28 C. Cross-check: WSU Extension TB103E cooling threshold 85-90 F",
+      "note": "Instant air temperature trigger. The 24h mean should stay at or below 25-26 C (see mean_daily_c). Fan has no hysteresis yet."
+    },
+    "mean_daily_c": {
+      "min": null,
+      "max": 26,
+      "source": "Harel et al. 2014, Agronomy 4:167-177 (25-26 C mean daily is the upper limit for fruit set and yield)",
+      "note": "Needs a 24h average. Not used by the controller yet."
+    },
+    "humidity_percent": {
+      "min": 55,
+      "max": 85,
+      "source": "Univ. of Arizona CEAC Greenhouse Crop Production ch.3",
+      "note": "Harel et al. 2014: daytime RH 50-70% best for pollination, 90% raises pollen heat sensitivity. Not used by the controller yet."
+    },
+    "soil_moisture_percent": {
+      "min": null,
+      "max": null,
+      "source": null,
+      "note": "Depends on sensor calibration (Ashraf et al. 2026). Nelson 7e ch.8 uses substrate tension 20-30 kPa, not percent."
+    },
+    "co2_ppm": {
+      "min": null,
+      "max": 2200,
+      "source": "Nelson, Greenhouse Operation and Management 7e, ch.10"
+    }
+  },
+  "cucumber": {
+    "temperature_c": {
+      "min": 18,
+      "max": 29,
+      "source": "min: Gruda et al., Cucumber (GAP for greenhouse vegetable production, SEE countries), fruits shorter below 18 C. max: Purdue Extension ID-521-W, day 77-84 F. Cross-check: Oregon State Extension; Amin et al. 2024 BMC Plant Biology 24:903 (25/18 C normal growth, 9/5 C severe damage)",
+      "note": "One band covering day and night."
+    },
+    "humidity_percent": {
+      "min": null,
+      "max": 90,
+      "source": "max: Amin et al. 2024 BMC Plant Biology 24:903 (95% RH reduced growth and chlorophyll vs 80%); NMSU Circular 556 (above 90% encourages disease in greenhouse vegetables)",
+      "note": "Upper limit only. No cucumber-specific lower limit found. Not used by the controller yet."
+    },
+    "soil_moisture_percent": {
+      "min": null,
+      "max": null,
+      "source": null,
+      "note": "Depends on sensor calibration."
+    },
+    "co2_ppm": {
+      "min": null,
+      "max": 1500,
+      "source": "Nelson, Greenhouse Operation and Management 7e, ch.10"
+    }
+  },
+  "potato": {
+    "temperature_c": {
+      "min": 15,
+      "max": 25,
+      "source": "min: tuber formation 15-18 C, Mohamed et al. 2010, J. Biol. Chem. Environ. Sci. 5(3):769-785 (Egypt). max: early growth 20-25 C (same paper); shoot growth maximum at 25 C, Tibbitts, Cao and Wheeler, NASA CR-177646 (1994)",
+      "note": "Cool-season crop. Tuber development optimum about 16-20 C (NASA CR-177646). Hard to hold in a hot greenhouse without cooling."
+    },
+    "humidity_percent": {
+      "min": null,
+      "max": null,
+      "source": null,
+      "note": "No numeric range found. Late blight spreads under sustained high humidity, haze and cloud (Shovon et al., GAUIC 2025 poster)."
+    },
+    "soil_moisture_percent": {
+      "min": null,
+      "max": null,
+      "source": null,
+      "note": "Depends on sensor calibration."
+    }
   }
 }
